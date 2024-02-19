@@ -17,10 +17,12 @@ LIBRARYLOADER_PATH = os.path.join(CTYPESGEN_DIR, "libraryloader.py")
 
 
 class WrapperPrinter:
-    def __init__(self, outpath, options, data):
+    def __init__(self, outpath, options, data, *args, **kwargs):
         status_message("Writing to %s." % (outpath or "stdout"))
 
         self.file = open(outpath, "w") if outpath else sys.stdout
+        python_output_path = kwargs.get('python_output', None)
+        self.file_python = open(python_output_path, "w") if python_output_path else sys.stdout
         self.options = options
 
         if self.options.strip_build_path and self.options.strip_build_path[-1] != os.path.sep:
@@ -31,6 +33,9 @@ class WrapperPrinter:
 
         self.print_header()
         self.file.write("\n")
+        self.file_python.write("from enum import IntEnum    # IntEnum over Enum so the vars can be cast to int()\n")
+        self.file_python.write("from .cdefs import *   # Needed for some of the values\n")
+        self.file_python.write("\n")
 
         self.print_preamble()
         self.file.write("\n")
@@ -63,6 +68,7 @@ class WrapperPrinter:
 
     def __del__(self):
         self.file.close()
+        self.file_python.close()
 
     def print_group(self, list, name, function):
         if list:
@@ -126,6 +132,7 @@ class WrapperPrinter:
 
         template_subs = self.template_subs()
         self.file.write(template_file.read() % template_subs)
+        self.file_python.write(template_file.read() % template_subs)
 
         template_file.close()
 
@@ -288,16 +295,13 @@ class WrapperPrinter:
 
     def print_enum(self, enum):
         # Produce a python enum as well
-        self.file.write(f'class {"".join(n[0].upper() + n[1:] for n in enum.tag.split("_"))}(Enum):\n')
+        self.file_python.write(f'class {"".join(n[0].upper() + n[1:] for n in enum.tag.split("_"))}(IntEnum):\n')
         for name, expr in  enum.ctype.enumerators:
-            self.file.write(f'\t{name} = {expr.py_string(False)}\n')
-        self.file.write('\n')
+            self.file_python.write(f'\t{name} = {expr.py_string(False)}\n')
+        self.file_python.write('\n')
 
         self.file.write("enum_%s = c_int" % enum.tag)
         self.srcinfo(enum.src)
-
-
-        pass
         # Values of enumerator are output as constants.
 
     def print_function(self, function):

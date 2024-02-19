@@ -46,6 +46,12 @@ def main(givenargs=None):
         help="write wrapper to FILE [default stdout]",
     )
     parser.add_argument(
+        "-p",
+        "--python_output",
+        metavar="FILE",
+        help="write python enums to FILE [default stdout]",
+    )
+    parser.add_argument(
         "-l",
         "--library",
         dest="libraries",
@@ -353,7 +359,7 @@ def main(givenargs=None):
     processor.process(descriptions, args)
 
     # Step 3: Print
-    printer(args.output, args, descriptions)
+    printer(args.output, args, descriptions, python_output=args.python_output)
 
     msgs.status_message("Wrapping complete.")
 
