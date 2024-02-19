@@ -287,8 +287,17 @@ class WrapperPrinter:
         self.file.write("]\n")
 
     def print_enum(self, enum):
+        # Produce a python enum as well
+        self.file.write(f'class {"".join(n[0].upper() + n[1:] for n in enum.tag.split("_"))}(Enum):\n')
+        for name, expr in  enum.ctype.enumerators:
+            self.file.write(f'\t{name} = {expr.py_string(False)}\n')
+        self.file.write('\n')
+
         self.file.write("enum_%s = c_int" % enum.tag)
         self.srcinfo(enum.src)
+
+
+        pass
         # Values of enumerator are output as constants.
 
     def print_function(self, function):
