@@ -33,8 +33,12 @@ class WrapperPrinter:
 
         self.print_header()
         self.file.write("\n")
+        
+        self.file_python.write('"""\n')
+        self.file_python.write("Python enums automatically generated.\n")
+        self.file_python.write('"""\n')
+        self.file_python.write("\n")
         self.file_python.write("from enum import IntEnum    # IntEnum over Enum so the vars can be cast to int()\n")
-        self.file_python.write("from .cdefs import *   # Needed for some of the values\n")
         self.file_python.write("\n")
 
         self.print_preamble()
@@ -295,7 +299,7 @@ class WrapperPrinter:
 
     def print_enum(self, enum):
         # Produce a python enum as well
-        self.file_python.write(f'class {"".join(n[0].upper() + n[1:] for n in enum.tag.split("_"))}(IntEnum):\n')
+        self.file_python.write(f'''class {''.join(n[0].upper() + n[1:] for n in enum.tag.split('_'))}(IntEnum):\n''')
         for name, expr in  enum.ctype.enumerators:
             self.file_python.write(f'\t{name} = {expr.py_string(False)}\n')
         self.file_python.write('\n')
